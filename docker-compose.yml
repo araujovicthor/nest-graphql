@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  # Application
+
+  database:
+    image: 'bitnami/mysql'
+    container_name: 'mysql'
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_DATABASE=app
+      - MYSQL_USER=docker
+      - MYSQL_PASSWORD=docker
+      - MYSQL_ROOT_PASSWORD=toor
+    volumes:
+      - 'mysql_data:/bitnami/mysql'
+    networks:
+      - app-net
+
+  redis:
+    image: 'bitnami/redis'
+    container_name: 'redis'
+    ports:
+      - '6379:6379'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - 'redis_data:/bitnami/redis/data'
+    networks:
+      - app-net
+
+  zookeeper:
+    image: 'bitnami/zookeeper:3'
+    container_name: 'zookeeper'
+    ports:
+      - '2181:2181'
+    volumes:
+      - 'zookeeper_data:/bitnami'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - app-net
+
+  kafka:
+    image: 'bitnami/kafka:3'
+    container_name: 'kafka'
+    ports:
+      - '9092:9092'
+    volumes:
+      - 'kafka_data:/bitnami'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
